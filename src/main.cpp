@@ -4,6 +4,8 @@
 #include <SDL_image.h>
 #include <SDL_mixer.h>
 
+
+const int SPRITE_SIZE = 256;
 // SDL Window
 SDL_Window *_window;
 
@@ -28,7 +30,7 @@ SDL_Texture *_headerText;
 SDL_Texture *_image;
 
 // Our sample rectangle that we can drag around the viewport
-SDL_Rect _sampleRect = {.x = 10, .y = 10, .w = 100, .h = 100};
+SDL_Rect rect = {.x = 10, .y = 10, .w = 100, .h = 100};
 SDL_bool _inSampleRect = SDL_FALSE;
 
 // Our sample 'music'
@@ -166,7 +168,7 @@ void handle_mouse_drag(SDL_Event e)
     // Point where mouse button down occurs
     SDL_Point p = {.x = e.motion.x, .y = e.motion.y};
 
-    if (SDL_PointInRect(&p, &_sampleRect)) {
+    if (SDL_PointInRect(&p, &rect)) {
       _inSampleRect = SDL_TRUE;
     }
   }
@@ -176,8 +178,8 @@ void handle_mouse_drag(SDL_Event e)
   }
 
   if (e.type == SDL_MOUSEMOTION && _inSampleRect == SDL_TRUE) {
-    _sampleRect.x += e.motion.xrel;
-    _sampleRect.y += e.motion.yrel;
+    rect.x += e.motion.xrel;
+    rect.y += e.motion.yrel;
   }
 }
 
@@ -188,6 +190,29 @@ void main_loop()
 {
   SDL_bool loop = SDL_TRUE;
   SDL_Event event;
+  int sprx = 0;
+  int spry = 0;
+  int sprvx = 0;
+  int sprvy = 0;
+
+  //INIZIALIZZO IMMAGINE SPRITE
+  SDL_Surface *sprite = NULL;
+  SDL_Texture *spriteTexture;
+    SDL_Rect    rcSprite;
+    SDL_Rect    gdSprite;
+
+  //CARICO IMMAGINE SPRITE
+  sprite= IMG_Load("resources/pila.png");
+  spriteTexture = SDL_CreateTextureFromSurface(_renderer, sprite);
+  SDL_FreeSurface(sprite);
+    rcSprite.x = 100;
+    rcSprite.y = 100;
+    rcSprite.w = SPRITE_SIZE;
+    rcSprite.h = SPRITE_SIZE;
+    gdSprite.x = 100;
+    gdSprite.y = 100;
+    gdSprite.w = SPRITE_SIZE;
+    gdSprite.h = SPRITE_SIZE;
 
   while (loop) {
 
@@ -196,14 +221,43 @@ void main_loop()
       if (event.type == SDL_QUIT) {
         loop = SDL_FALSE;
       } else if (event.type == SDL_KEYDOWN) {
-        switch (event.key.keysym.sym) {
-          case SDLK_ESCAPE:
-            loop = SDL_FALSE;
-            break;
-          default:
-            loop = SDL_TRUE;
-        }
+          if(event.key.keysym.sym == SDLK_LEFT){
+              rect.x += -5;
+          }
+          if(event.key.keysym.sym == SDLK_RIGHT){
+              rect.x += 5;
+          }
+          if(event.key.keysym.sym == SDLK_UP){
+              rect.y += -5;
+          }
+          if(event.key.keysym.sym == SDLK_DOWN){
+              rect.y += 5;
+          }
+          if(event.key.keysym.sym == SDLK_ESCAPE){
+              loop=SDL_FALSE;
+          }
       }
+      /*
+        if (up == true)
+        {
+            spriteDstY-=speed;
+        }
+
+        if (down == true)
+        {
+            spriteDstY+=speed;
+        }
+
+        if (left == true)
+        {
+            spriteDstX-=speed;
+        }
+
+        if (right == true)
+        {
+            spriteDstX+=speed;
+        }
+        */
       handle_mouse_drag(event);
     }
 
@@ -217,9 +271,16 @@ void main_loop()
     // but for now we'll just use it as a background
     SDL_RenderCopy(_renderer, _image, NULL, NULL);
 
+
+
     // Render the sample rectangle
     SDL_SetRenderDrawColor(_renderer, 255, 255, 255, 1);
-    SDL_RenderFillRect(_renderer, &_sampleRect);
+    SDL_RenderFillRect(_renderer, &rect);
+
+    //RENDER SPRITE
+    if(!(SDL_RenderCopy(_renderer, spriteTexture,NULL, &gdSprite))){
+        printf("ERRORE NEL CARICARE LO SPRITE \n");
+    }
 
     // Render sample text
     SDL_RenderCopy(_renderer, _headerText, NULL, &_headerTextRect);
@@ -257,7 +318,7 @@ int main()
   setup_texture();
 
   // Play an audio file
-  play_audio();
+  //play_audio();
 
   // Run our main game loop
   main_loop();
